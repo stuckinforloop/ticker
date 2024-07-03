@@ -1,0 +1,76 @@
+{{ $values := .Values }}
+{{ range $worker := $values.workers }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    name: {{ $values.name }}-worker-{{ $worker | replace "_" "-" }}
+  name: {{ $values.name }}-worker-{{ $worker | replace "_" "-" }}
+  namespace: {{ $values.namespace }}
+spec:
+  progressDeadlineSeconds: 600
+  replicas: {{ $worker.replicas }}
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      name: {{ $values.name }}-worker-{{ $worker | replace "_" "-" }}
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        name: {{ $values.name }}-worker-{{ $worker | replace "_" "-" }}
+      name: {{ $values.name }}-worker-{{ $worker | replace "_" "-" }}
+    spec:
+      automountServiceAccountToken: true
+      containers:
+        - name: worker
+          ports:
+            - containerPort: 8080
+          env:
+            - name: COMMAND
+              value: {{ $worker.command }}
+          envFrom:
+            - secretRef:
+                name: {{ $values.name }}
+                optional: false
+          image: {{ $worker.image }}
+          imagePullPolicy: IfNotPresent
+          # readinessProbe:
+          #   failureThreshold: 2
+          #   periodSeconds: 5
+          #   initialDelaySeconds: 10
+          #   successThreshold: 1
+          #   timeoutSeconds: 2
+          #   httpGet:
+          #     path: /ready
+          #     port: 8081
+          #     scheme: HTTP
+          # livenessProbe:
+          #   failureThreshold: 2
+          #   periodSeconds: 5
+          #   initialDelaySeconds: 10
+          #   successThreshold: 1
+          #   timeoutSeconds: 2
+          #   httpGet:
+          #     path: /live
+          #     port: 8081
+          #     scheme: HTTP
+          resources:
+            requests:
+              cpu: {{ $worker.requests_cpu }}
+              memory: {{ $worker.requests_memory }}
+            limits:
+              cpu: {{ $worker.limits_cpu }}
+              memory: {{ $worker.limits_memory }}   
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 60
+---
+{{ end }}
+

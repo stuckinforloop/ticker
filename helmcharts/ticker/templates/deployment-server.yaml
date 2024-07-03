@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    name: {{ .Values.name }}
+  name: {{ .Values.name }}
+  namespace: {{ .Values.namespace }}
+spec:
+  progressDeadlineSeconds: 600
+  replicas: {{ .Values.server_replicas }}
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      name: {{ .Values.name }}
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        name: {{ .Values.name }}
+      name: {{ .Values.name }}
+    spec:
+      automountServiceAccountToken: true
+      containers:
+        - name: server
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - secretRef:
+                name: {{ .Values.name }}
+                optional: false
+          image: {{ .Values.server_image }}
+          imagePullPolicy: IfNotPresent
+          # readinessProbe:
+          #   failureThreshold: 2
+          #   periodSeconds: 5
+          #   initialDelaySeconds: 10
+          #   successThreshold: 1
+          #   timeoutSeconds: 2
+          #   httpGet:
+          #     path: /ready
+          #     port: 8081
+          #     scheme: HTTP
+          # livenessProbe:
+          #   failureThreshold: 2
+          #   periodSeconds: 5
+          #   initialDelaySeconds: 10
+          #   successThreshold: 1
+          #   timeoutSeconds: 2
+          #   httpGet:
+          #     path: /live
+          #     port: 8081
+          #     scheme: HTTP
+          resources:
+            requests:
+              cpu: {{ .Values.server_requests_cpu }}
+              memory: {{ .Values.server_requests_memory }}
+            limits:
+              cpu: {{ .Values.server_limits_cpu }}
+              memory: {{ .Values.server_limits_memory }}
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 60

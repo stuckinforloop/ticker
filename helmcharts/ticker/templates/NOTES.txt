@@ -1,0 +1,5 @@
+************************************************
+Thank you for installing {{ .Chart.Name }}.
+
+This installation of yours can be accessed on {{ .Values.name }}.svc.cluster.local
+************************************************

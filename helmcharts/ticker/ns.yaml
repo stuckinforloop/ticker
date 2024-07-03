@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    name: ticker
+  name: ticker
+spec:
+  finalizers:
+    - kubernetes

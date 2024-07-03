@@ -1,0 +1,27 @@
+server_image: <to-add>
+server_requests_cpu: 50m
+server_requests_memory: 200Mi
+server_limits_cpu: 100m
+server_limits_memory: 400Mi
+server_replicas: 1
+namespace: ticker
+name: ticker
+secret_name: ticker
+
+workers:
+  - name: scheduler
+    replicas: 1
+    command: schedule
+    image: <to-add>
+    requests_cpu: 50m
+    requests_memory: 200Mi
+    limits_cpu: 100m
+    limits_memory: 400Mi
+  - name: executor
+    replicas: 6
+    command: executor
+    image: <to-add>
+    requests_cpu: 50m
+    requests_memory: 200Mi
+    limits_cpu: 100m
+    limits_memory: 400Mi
