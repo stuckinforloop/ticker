@@ -1,9 +1,8 @@
 package server
 
 import (
-	"log"
-
 	"github.com/spf13/cobra"
+	"github.com/stuckinforloop/ticker/server"
 )
 
 // ServerCmd represents the server command
@@ -11,9 +10,8 @@ var ServerCmd = &cobra.Command{
 	Use:   "server",
 	Short: "starts server for ticker",
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := cmd.Help(); err != nil {
-			log.Fatal(err)
-		}
+		srv := server.New()
+		srv.Start()
 	},
 }
 

@@ -19,6 +19,7 @@ var rootCmd = &cobra.Command{
 	Use:   "ticker",
 	Short: "Ticker is an opensource distributed task scheduler",
 	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println(viper.GetString("DSN"))
 		if err := cmd.Help(); err != nil {
 			log.Fatal(err)
 		}
@@ -62,7 +63,7 @@ func initConfig() {
 
 		// Search config in home directory with name ".ticker" (without extension).
 		viper.AddConfigPath(home)
-		viper.SetConfigType("yaml")
+		viper.SetConfigType("toml")
 		viper.SetConfigName(".ticker")
 	}
 
