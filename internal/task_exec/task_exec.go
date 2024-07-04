@@ -50,13 +50,33 @@ type ExecutorPayload struct {
 }
 
 func (dao *TaskExecDAO) ScheduleTasks(ctx context.Context) error {
-	for {
-		err := dao.EnqueueTasks(ctx)
-		if err != nil {
-			dao.Logger.Error("enqueue task", zap.Error(err))
+	ticker := time.NewTicker(3 * time.Second)
+	defer ticker.Stop()
+
+	done := make(chan bool)
+
+	go func() {
+		for {
+			select {
+			case <-done:
+				return
+			case <-ticker.C:
+				go func() {
+					err := dao.EnqueueTasks(ctx)
+					if err != nil {
+						dao.Logger.Error("enqueue task", zap.Error(err))
+					}
+				}()
+			}
 		}
-		time.Sleep(3 * time.Second)
+	}()
+
+	select {
+	case <-ctx.Done():
+		done <- true
 	}
+
+	return nil
 }
 
 func (dao *TaskExecDAO) EnqueueTasks(ctx context.Context) error {
