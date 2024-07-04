@@ -16,7 +16,7 @@ CREATE TABLE tasks (
     url TEXT NOT NULL,
     http_method TEXT NOT NULL,
     http_headers JSONB,
-    payload JSONB,
+    post_data JSONB,
     retry_after INT,
     failure_threshold INT NOT NULL,
     notify BOOLEAN NOT NULL,

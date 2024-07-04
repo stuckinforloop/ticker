@@ -22,6 +22,10 @@ func (t *TaskDAO) fillDefaults(task *Task) {
 		task.Instances = typePtr(0)
 	}
 
+	if task.RetryAfter == nil {
+		task.RetryAfter = typePtr(0)
+	}
+
 	if task.FailureThreshold == nil {
 		task.FailureThreshold = typePtr(20)
 	}

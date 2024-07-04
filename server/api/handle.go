@@ -41,6 +41,13 @@ func (a *API) RegisterRoutes() {
 	})
 
 	a.mux.Route("/tasks", func(r chi.Router) {
+		r.Get("/", WithResponse(a.GetTasks))
 		r.Post("/", WithResponse(a.CreateTask))
+
+		r.Route("/{id}", func(r chi.Router) {
+			r.Get("/", WithResponse(a.GetTask))
+			r.Patch("/", WithResponse(a.UpdateTask))
+			r.Delete("/", WithResponse(a.DeleteTask))
+		})
 	})
 }
