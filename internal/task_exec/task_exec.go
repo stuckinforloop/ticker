@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/gitploy-io/cronexpr"
-	"github.com/stuckinforloop/ticker/internal/queue"
 	"github.com/stuckinforloop/ticker/internal/task"
 )
 
@@ -78,8 +77,6 @@ func (dao *TaskExecDAO) EnqueueTasks(ctx context.Context) error {
 	}
 	defer rows.Close()
 
-	queue := queue.New()
-
 	currentTime := time.Now()
 	tasks := []task.Task{}
 	for rows.Next() {
@@ -129,7 +126,7 @@ func (dao *TaskExecDAO) EnqueueTasks(ctx context.Context) error {
 				return fmt.Errorf("marshal sqs message failed: %w", err)
 			}
 
-			messageID, err := queue.Enqueue(
+			messageID, err := dao.Queue.Enqueue(
 				ctx, ExecutorQueueName, string(message), dedupeID, groupID, int64(0))
 			if err != nil {
 				return fmt.Errorf("sqs enqueue failed: %w", err)
