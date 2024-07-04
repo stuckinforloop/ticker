@@ -23,7 +23,10 @@ const (
 	StatusCompleted Status = "completed"
 )
 
-const ExecutorQueueName = "task-executor-1.fifo"
+const (
+	ExecutorQueueName = "task-executor-1.fifo"
+	NotifierQueueName = "task-status-updates"
+)
 
 type TaskExec struct {
 	ID         string         `json:"id"`
@@ -74,6 +77,55 @@ func (dao *TaskExecDAO) ScheduleTasks(ctx context.Context) error {
 
 					dao.enqueueTasks(ctx, tasks)
 				}()
+			}
+		}
+	}()
+
+	select {
+	case <-ctx.Done():
+		done <- true
+	}
+
+	return nil
+}
+
+func (dao *TaskExecDAO) UpdateTaskStatusNotify(ctx context.Context) error {
+	done := make(chan bool)
+
+	go func() {
+		for {
+			select {
+			case <-done:
+				return
+			default:
+				dao.Logger.Info("Attempting dequeue")
+				messageId, message, err := dao.Queue.Dequeue(ctx, NotifierQueueName, 30)
+				if err != nil {
+					dao.Logger.Error("Dequeue failed", zap.Error(err))
+					continue // Continue to retry
+				}
+
+				if message == "" && messageId == "" {
+					dao.Logger.Info("Dequeue: empty results")
+					continue
+				}
+
+				dao.Logger.Info("Dequeue success",
+					zap.String("message", message),
+					zap.String("message_id", messageId))
+
+				// TODO
+				// dao.updateTaskStatus(message)
+				// dao.notify(message)
+
+				err = dao.Queue.Acknowledge(ctx, messageId, NotifierQueueName)
+				if err != nil {
+					dao.Logger.Error("Ack failed", zap.Error(err))
+				}
+
+				dao.Logger.Info("Ack success",
+					zap.String("message", message),
+					zap.String("message_id", messageId))
 			}
 		}
 	}()
