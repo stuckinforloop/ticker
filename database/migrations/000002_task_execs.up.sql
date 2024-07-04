@@ -6,6 +6,7 @@ CREATE TABLE task_execs (
     run_at BIGINT,
     started_at BIGINT,
     finished_at BIGINT,
+    response JSONB,
     created_at BIGINT,
     updated_at BIGINT
 );
