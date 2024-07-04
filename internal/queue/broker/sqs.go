@@ -52,7 +52,7 @@ func (q *SQS) Enqueue(
 		})
 
 	if err != nil {
-		return "", fmt.Errof("enqueue failed: %w", err)
+		return "", fmt.Errorf("enqueue failed: %w", err)
 	}
 
 	return *result.MessageId, nil
@@ -75,7 +75,7 @@ func (q *SQS) Dequeue(
 		})
 
 	if err != nil {
-		return "", "", fmt.Errof("dequeue failed: %w", err)
+		return "", "", fmt.Errorf("dequeue failed: %w", err)
 	}
 
 	if len(result.Messages) == 0 {

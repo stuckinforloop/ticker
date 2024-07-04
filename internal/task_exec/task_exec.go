@@ -60,7 +60,12 @@ func (dao *TaskExecDAO) ScheduleTasks(ctx context.Context) error {
 }
 
 func (dao *TaskExecDAO) EnqueueTasks(ctx context.Context) error {
-	dao.Logger.Info(fmt.Sprintf("Attempting enqueue at %s", time.Now().String()))
+	currentTimeUnix := dao.TimeNow()
+	currentTime := time.Unix(currentTimeUnix, 0)
+
+	dao.Logger.Info(
+		"Attempting enqueue",
+		zap.Time("current_time", currentTime))
 
 	db := dao.RO()
 	query := `
@@ -77,9 +82,6 @@ func (dao *TaskExecDAO) EnqueueTasks(ctx context.Context) error {
 		return fmt.Errorf("get tasks: %w", err)
 	}
 	defer rows.Close()
-
-	currentTimeUnix := dao.TimeNow()
-	currentTime := time.Unix(currentTimeUnix, 0)
 
 	tasks := []task.Task{}
 	for rows.Next() {
@@ -135,7 +137,12 @@ func (dao *TaskExecDAO) EnqueueTasks(ctx context.Context) error {
 				return fmt.Errorf("sqs enqueue failed: %w", err)
 			}
 
-			fmt.Println("messageID: ", messageID)
+			dao.Logger.Info(
+				"Enqueue success",
+				zap.Time("current_time", currentTime),
+				zap.String("task", t.ID),
+				zap.String("task_expression", t.Expression),
+				zap.String("message_id", messageID))
 		}
 	}
 
