@@ -11,5 +11,5 @@ CREATE TABLE task_execs (
     updated_at BIGINT
 );
 
--- Create an index on the "task_id" column
-CREATE INDEX ON task_execs (task_id);
+-- Create unique index on the "task_id" and "run_at" columns
+CREATE UNIQUE INDEX ON task_execs (task_id, run_at);
