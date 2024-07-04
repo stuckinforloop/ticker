@@ -1,0 +1,8 @@
+dsn = "postgres://postgres:ticker@localhost:5432/postgres?sslmode=disable"
+
+queue_broker = "sqs"
+
+[aws]
+    region = "ap-south-1"
+    use_anonymous_credentials = false
+    sqs_queue_prefix = "https://sqs.ap-south-1.amazonaws.com/<account_id>/"

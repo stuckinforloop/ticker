@@ -4,7 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
+	"github.com/gitploy-io/cronexpr"
+	"github.com/stuckinforloop/ticker/internal/queue"
 	"github.com/stuckinforloop/ticker/internal/task"
 )
 
@@ -17,6 +20,8 @@ const (
 	StatusCompleted Status = "completed"
 )
 
+const ExecutorQueueName = "task-executor-1.fifo"
+
 type TaskExec struct {
 	ID         string `json:"id"`
 	TaskID     string `json:"task_id"`
@@ -28,8 +33,34 @@ type TaskExec struct {
 	UpdatedAt  int64  `json:"updated_at"`
 }
 
+type ExecutorPayload struct {
+	TaskID           string         `json:"task_id"`
+	RunAt            int64          `json:"run_at"`
+	Timezone         string         `json:"timezone"`
+	Timeout          *int           `json:"timeout"`
+	Instances        *int           `json:"instances"`
+	URL              string         `json:"url"`
+	HTTPMethod       string         `json:"http_method"`
+	HTTPHeaders      map[string]any `json:"http_headers"`
+	PostData         map[string]any `json:"post_data"`
+	RetryAfter       *int           `json:"retry_after"`
+	FailureThreshold *int           `json:"failure_threshold"`
+	Notify           bool           `json:"notify"`
+	NotifyEvery      *int           `json:"notify_every"`
+}
+
 func (dao *TaskExecDAO) ScheduleTasks(ctx context.Context) error {
-	dao.Logger.Info("in ScheduleTasks")
+	for {
+		err := dao.EnqueueTasks(ctx)
+		if err != nil {
+			dao.Logger.Error(fmt.Sprintf("Enqueue failed, error: %s", err.Error()))
+		}
+		time.Sleep(3 * time.Second)
+	}
+}
+
+func (dao *TaskExecDAO) EnqueueTasks(ctx context.Context) error {
+	dao.Logger.Info(fmt.Sprintf("Attempting enqueue at %s", time.Now().String()))
 
 	db := dao.RO()
 	query := `
@@ -47,6 +78,9 @@ func (dao *TaskExecDAO) ScheduleTasks(ctx context.Context) error {
 	}
 	defer rows.Close()
 
+	queue := queue.New()
+
+	currentTime := time.Now()
 	tasks := []task.Task{}
 	for rows.Next() {
 		t := task.Task{}
@@ -69,9 +103,41 @@ func (dao *TaskExecDAO) ScheduleTasks(ctx context.Context) error {
 		}
 
 		tasks = append(tasks, t)
-	}
 
-	fmt.Println(tasks)
+		nextTime := cronexpr.MustParse(t.Expression).Next(currentTime)
+		if nextTime.Before(currentTime.Add(10 * time.Second)) {
+			dedupeID := fmt.Sprintf("%s-%d", t.ID, nextTime.Unix())
+			groupID := t.ID
+			payload := ExecutorPayload{
+				TaskID:           t.ID,
+				RunAt:            nextTime.Unix(),
+				Timezone:         string(t.Timezone),
+				Timeout:          t.Timeout,
+				Instances:        t.Instances,
+				URL:              t.URL,
+				HTTPMethod:       t.HTTPMethod,
+				HTTPHeaders:      t.HTTPHeaders,
+				PostData:         t.PostData,
+				RetryAfter:       t.RetryAfter,
+				FailureThreshold: t.FailureThreshold,
+				Notify:           t.Notify,
+				NotifyEvery:      t.NotifyEvery,
+			}
+
+			message, err := json.Marshal(payload)
+			if err != nil {
+				return fmt.Errorf("marshal sqs message failed: %w", err)
+			}
+
+			messageID, err := queue.Enqueue(
+				ctx, ExecutorQueueName, string(message), dedupeID, groupID, int64(0))
+			if err != nil {
+				return fmt.Errorf("sqs enqueue failed: %w", err)
+			}
+
+			fmt.Println("messageID: ", messageID)
+		}
+	}
 
 	return nil
 }
