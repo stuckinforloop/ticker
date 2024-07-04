@@ -53,7 +53,7 @@ func (dao *TaskExecDAO) ScheduleTasks(ctx context.Context) error {
 	for {
 		err := dao.EnqueueTasks(ctx)
 		if err != nil {
-			dao.Logger.Error(fmt.Sprintf("Enqueue failed, error: %s", err.Error()))
+			dao.Logger.Error("enqueue task", zap.Error(err))
 		}
 		time.Sleep(3 * time.Second)
 	}
@@ -80,7 +80,7 @@ func (dao *TaskExecDAO) EnqueueTasks(ctx context.Context) error {
 
 	queue := queue.New()
 
-	currentTime := time.Now()
+	currentTime := dao.TimeNow()
 	tasks := []task.Task{}
 	for rows.Next() {
 		t := task.Task{}
