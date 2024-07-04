@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"github.com/stuckinforloop/ticker/server"
 )
 
@@ -16,4 +17,6 @@ var ServerCmd = &cobra.Command{
 }
 
 func init() {
+	ServerCmd.Flags().IntP("port", "p", 9000, "port to listen for requests")
+	viper.GetViper().BindPFlag("port", ServerCmd.Flags().Lookup("port"))
 }
