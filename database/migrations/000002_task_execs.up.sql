@@ -6,9 +6,10 @@ CREATE TABLE task_execs (
     run_at BIGINT,
     started_at BIGINT,
     finished_at BIGINT,
+    response JSONB,
     created_at BIGINT,
     updated_at BIGINT
 );
 
--- Create an index on the "task_id" column
-CREATE INDEX ON task_execs (task_id);
+-- Create unique index on the "task_id" and "run_at" columns
+CREATE UNIQUE INDEX ON task_execs (task_id, run_at);

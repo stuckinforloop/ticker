@@ -36,6 +36,8 @@ func (s *Worker) Run(handler func(ctx context.Context) error) {
 	s.DAO.Logger.Info("starting worker")
 
 	ctx := context.Background()
+	ctx, ctxCancel := context.WithCancel(ctx)
+
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
@@ -53,5 +55,6 @@ func (s *Worker) Run(handler func(ctx context.Context) error) {
 
 	// Block until signal is received.
 	<-c
+	ctxCancel()
 	wg.Wait()
 }
