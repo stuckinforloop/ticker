@@ -48,11 +48,11 @@ func (q *SQS) Enqueue(
 			MessageBody:            aws.String(message),
 			MessageDeduplicationId: &dedupeID,
 			MessageGroupId:         &groupID,
-			QueueUrl:               aws.String(q.getQueueUrl(queueName)),
+			QueueUrl:               aws.String(q.getQueueURL(queueName)),
 		})
 
 	if err != nil {
-		return "", err
+		return "", fmt.Errof("enqueue failed: %w", err)
 	}
 
 	return *result.MessageId, nil
@@ -69,13 +69,13 @@ func (q *SQS) Dequeue(
 			MessageAttributeNames: []*string{
 				aws.String(sqs.QueueAttributeNameAll),
 			},
-			QueueUrl:          aws.String(q.getQueueUrl(queueName)),
+			QueueUrl:          aws.String(q.getQueueURL(queueName)),
 			VisibilityTimeout: aws.Int64(visibilityTimeout),
 			// WaitTimeSeconds:     aws.Int64(waitTimeout),
 		})
 
 	if err != nil {
-		return "", "", err
+		return "", "", fmt.Errof("dequeue failed: %w", err)
 	}
 
 	if len(result.Messages) == 0 {
@@ -90,14 +90,14 @@ func (q *SQS) Acknowledge(
 	ctx context.Context, id string, queueName string,
 ) error {
 	_, err := q.client.DeleteMessage(&sqs.DeleteMessageInput{
-		QueueUrl:      aws.String(q.getQueueUrl(queueName)),
+		QueueUrl:      aws.String(q.getQueueURL(queueName)),
 		ReceiptHandle: aws.String(id),
 	})
 
 	return err
 }
 
-func (q *SQS) getQueueUrl(queueName string) string {
+func (q *SQS) getQueueURL(queueName string) string {
 	prefix := viper.GetString("aws.sqs_queue_prefix")
 	return fmt.Sprintf("%s/%s", strings.TrimRight(prefix, "/"), queueName)
 }
