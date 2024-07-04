@@ -78,7 +78,9 @@ func (dao *TaskExecDAO) EnqueueTasks(ctx context.Context) error {
 	}
 	defer rows.Close()
 
-	currentTime := dao.TimeNow()
+	currentTimeUnix := dao.TimeNow()
+	currentTime := time.Unix(currentTimeUnix, 0)
+
 	tasks := []task.Task{}
 	for rows.Next() {
 		t := task.Task{}
