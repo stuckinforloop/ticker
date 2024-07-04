@@ -40,14 +40,14 @@ func NewSQS() *SQS {
 
 func (q *SQS) Enqueue(
 	ctx context.Context, queueName string, message string,
-	dedupeID string, groupID string, delay int64,
+	dedupeID *string, groupID *string, delay int64,
 ) (string, error) {
 	result, err := q.client.SendMessage(
 		&sqs.SendMessageInput{
 			DelaySeconds:           aws.Int64(delay),
 			MessageBody:            aws.String(message),
-			MessageDeduplicationId: &dedupeID,
-			MessageGroupId:         &groupID,
+			MessageDeduplicationId: dedupeID,
+			MessageGroupId:         groupID,
 			QueueUrl:               aws.String(q.getQueueURL(queueName)),
 		})
 
@@ -71,7 +71,7 @@ func (q *SQS) Dequeue(
 			},
 			QueueUrl:          aws.String(q.getQueueURL(queueName)),
 			VisibilityTimeout: aws.Int64(visibilityTimeout),
-			// WaitTimeSeconds:     aws.Int64(waitTimeout),
+			WaitTimeSeconds:   aws.Int64(20), // For long polling
 		})
 
 	if err != nil {

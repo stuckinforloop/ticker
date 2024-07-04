@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/stuckinforloop/ticker/internal/task"
@@ -22,6 +23,8 @@ func (a *API) CreateTask(w http.ResponseWriter, r *http.Request) *Response {
 			Err:        err,
 		}
 	}
+
+	payload.HTTPMethod = strings.ToUpper(payload.HTTPMethod)
 
 	t, err := taskDAO.CreateTask(r.Context(), payload)
 	if err != nil {

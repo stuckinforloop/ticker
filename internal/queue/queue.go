@@ -14,8 +14,8 @@ type Queue interface {
 		ctx context.Context,
 		queueName string,
 		message string,
-		dedupeID string,
-		groupID string,
+		dedupeID *string,
+		groupID *string,
 		delay int64) (string, error)
 
 	Dequeue(

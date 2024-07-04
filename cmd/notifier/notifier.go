@@ -1,4 +1,4 @@
-package executor
+package notifier
 
 import (
 	"github.com/spf13/cobra"
@@ -6,16 +6,15 @@ import (
 	"github.com/stuckinforloop/ticker/worker"
 )
 
-// ExecutorCmd represents the executor command
-var ExecutorCmd = &cobra.Command{
-	Use:   "executor",
-	Short: "starts executor for ticker",
+// NotifierCmd represents the notifier command
+var NotifierCmd = &cobra.Command{
+	Use:   "notifier",
+	Short: "starts notifier for ticker",
 	Run: func(cmd *cobra.Command, args []string) {
 		w := worker.New()
 		taskExecDAO := taskexec.NewTaskExecDAO(w.DAO)
-		w.Run(taskExecDAO.ExecuteTasks)
+		w.Run(taskExecDAO.UpdateTaskStatusNotify)
 	},
 }
 
-func init() {
-}
+func init() {}
