@@ -39,6 +39,8 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ticker.yaml)")
+	rootCmd.PersistentFlags().StringP("environment", "e", "dev", "execution environment")
+	viper.BindPFlag("environment", rootCmd.PersistentFlags().Lookup("environment"))
 
 	// add subcommands
 	addSubCommands()
