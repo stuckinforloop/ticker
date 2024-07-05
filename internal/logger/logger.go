@@ -1,12 +1,15 @@
 package logger
 
 import (
+	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
-func New(env string) (*zap.Logger, error) {
+func New() (*zap.Logger, error) {
 	var cfg zap.Config
+
+	env := viper.GetString("environment")
 
 	switch env {
 	case "dev":

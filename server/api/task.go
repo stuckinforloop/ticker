@@ -3,13 +3,36 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
+	"github.com/gitploy-io/cronexpr"
 	"github.com/go-chi/chi/v5"
 	"github.com/stuckinforloop/ticker/internal/task"
 	"go.uber.org/zap"
 )
+
+func validateTask(payload *task.Task) error {
+	if payload.Expression == "" {
+		return errors.New("expression is required")
+	} else {
+		if _, err := cronexpr.Parse(payload.Expression); err != nil {
+			return fmt.Errorf("invalid expression: %w", err)
+		}
+	}
+
+	// TODO: validate URL
+	if payload.URL == "" {
+		return errors.New("url is required")
+	}
+
+	if payload.HTTPMethod == "" {
+		return errors.New("http method is required")
+	}
+
+	return nil
+}
 
 func (a *API) CreateTask(w http.ResponseWriter, r *http.Request) *Response {
 	taskDAO := task.NewTaskDAO(a.dao)
@@ -24,6 +47,12 @@ func (a *API) CreateTask(w http.ResponseWriter, r *http.Request) *Response {
 		}
 	}
 
+	if err := validateTask(payload); err != nil {
+		return &Response{
+			StatusCode: http.StatusBadRequest,
+			Err:        err,
+		}
+	}
 	payload.HTTPMethod = strings.ToUpper(payload.HTTPMethod)
 
 	t, err := taskDAO.CreateTask(r.Context(), payload)

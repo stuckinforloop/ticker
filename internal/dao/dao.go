@@ -24,7 +24,7 @@ type DAO struct {
 }
 
 func New(opts ...Option) (*DAO, error) {
-	logger, err := logger.New("dev")
+	logger, err := logger.New()
 	if err != nil {
 		return nil, fmt.Errorf("setup logger: %w", err)
 	}

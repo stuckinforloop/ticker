@@ -6,6 +6,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
+	"github.com/spf13/viper"
 )
 
 type Response struct {
@@ -35,6 +37,24 @@ func (a *API) RegisterRoutes() {
 	// register middlewares
 	a.mux.Use(middleware.Recoverer)
 	a.mux.Use(WithLogger(a.dao.Logger))
+
+	allowedOrigins := make([]string, 0)
+	env := viper.GetString("environment")
+	switch env {
+	case "dev":
+		allowedOrigins = append(allowedOrigins, "http://localhost:3000")
+	case "prod":
+		// FIXME: add valid origins
+	}
+
+	a.mux.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   allowedOrigins,
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: false,
+		MaxAge:           300,
+	}))
 
 	a.mux.Route("/", func(r chi.Router) {
 		r.Get("/ping", WithResponse(a.Ping))
