@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 )
@@ -167,9 +168,10 @@ func (p *ExecutorPayload) execute(ctx context.Context, now int64) ([]byte, error
 	if err != nil {
 		return nil, fmt.Errorf("do request: %w", err)
 	}
+	defer resp.Body.Close()
 
-	respJSON := []byte{}
-	if err := json.NewDecoder(resp.Body).Decode(&respJSON); err != nil {
+	respJSON, err := io.ReadAll(resp.Body)
+	if err != nil {
 		return []byte(`{"response": ""}`), nil
 	}
 
