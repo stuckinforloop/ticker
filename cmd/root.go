@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stuckinforloop/ticker/cmd/executor"
+	"github.com/stuckinforloop/ticker/cmd/notifier"
 	"github.com/stuckinforloop/ticker/cmd/scheduler"
 	"github.com/stuckinforloop/ticker/cmd/server"
 )
@@ -73,5 +74,6 @@ func initConfig() {
 func addSubCommands() {
 	rootCmd.AddCommand(executor.ExecutorCmd)
 	rootCmd.AddCommand(scheduler.SchedulerCmd)
+	rootCmd.AddCommand(notifier.NotifierCmd)
 	rootCmd.AddCommand(server.ServerCmd)
 }

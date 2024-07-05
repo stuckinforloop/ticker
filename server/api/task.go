@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gitploy-io/cronexpr"
 	"github.com/go-chi/chi/v5"
@@ -52,6 +53,7 @@ func (a *API) CreateTask(w http.ResponseWriter, r *http.Request) *Response {
 			Err:        err,
 		}
 	}
+	payload.HTTPMethod = strings.ToUpper(payload.HTTPMethod)
 
 	t, err := taskDAO.CreateTask(r.Context(), payload)
 	if err != nil {
