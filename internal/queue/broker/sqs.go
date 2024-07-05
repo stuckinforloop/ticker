@@ -71,7 +71,7 @@ func (q *SQS) Dequeue(
 			},
 			QueueUrl:          aws.String(q.getQueueURL(queueName)),
 			VisibilityTimeout: aws.Int64(visibilityTimeout),
-			// WaitTimeSeconds:     aws.Int64(waitTimeout),
+			WaitTimeSeconds:   aws.Int64(20), // For long polling
 		})
 
 	if err != nil {
