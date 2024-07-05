@@ -10,6 +10,7 @@ import (
 	"github.com/gitploy-io/cronexpr"
 	"github.com/go-chi/chi/v5"
 	"github.com/stuckinforloop/ticker/internal/task"
+	taskexec "github.com/stuckinforloop/ticker/internal/task_exec"
 	"go.uber.org/zap"
 )
 
@@ -71,8 +72,14 @@ func (a *API) CreateTask(w http.ResponseWriter, r *http.Request) *Response {
 	}
 }
 
+type GetTaskResponse struct {
+	Task            *task.Task           `json:"task"`
+	RecentTaskExecs *[]taskexec.TaskExec `json:"recent_executions"`
+}
+
 func (a *API) GetTask(w http.ResponseWriter, r *http.Request) *Response {
 	taskDAO := task.NewTaskDAO(a.dao)
+	taskExecDAO := taskexec.NewTaskExecDAO(a.dao)
 
 	id := chi.URLParam(r, "id")
 	t, err := taskDAO.GetTask(r.Context(), id)
@@ -92,9 +99,17 @@ func (a *API) GetTask(w http.ResponseWriter, r *http.Request) *Response {
 		}
 	}
 
+	execs, err := taskExecDAO.ListTaskExecs(r.Context(), t.ID, 10)
+	if err != nil {
+		a.dao.Logger.Error("list task_exec", zap.Error(err))
+	}
+
 	return &Response{
 		StatusCode: http.StatusOK,
-		Data:       t,
+		Data: GetTaskResponse{
+			Task:            t,
+			RecentTaskExecs: execs,
+		},
 	}
 }
 

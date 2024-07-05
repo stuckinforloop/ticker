@@ -55,6 +55,47 @@ type ExecutorPayload struct {
 	NotifyEvery      *int           `json:"notify_every"`
 }
 
+func (dao *TaskExecDAO) ListTaskExecs(ctx context.Context, taskId string, limit int64) (*[]TaskExec, error) {
+	db := dao.RO()
+	query := `
+		SELECT
+			id, task_id, status, run_at, started_at,
+			finished_at, response, created_at, updated_at
+		FROM task_execs
+		WHERE task_id = $1
+		ORDER BY run_at DESC
+		LIMIT $2
+	`
+	execs := []TaskExec{}
+	rows, err := db.QueryContext(ctx, query, taskId, limit)
+	if err != nil {
+		return nil, fmt.Errorf("list task_execs: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		t := TaskExec{}
+		response := []byte{}
+		if err := rows.Scan(
+			&t.ID, &t.TaskID, &t.Status, &t.RunAt,
+			&t.StartedAt, &t.FinishedAt, &response,
+			&t.CreatedAt, &t.UpdatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("scan row: %w", err)
+		}
+
+		if response != nil {
+			if err := json.Unmarshal(response, &t.Response); err != nil {
+				return nil, fmt.Errorf("unmarshal response: %w", err)
+			}
+		}
+
+		execs = append(execs, t)
+	}
+
+	return &execs, nil
+}
+
 func (dao *TaskExecDAO) findTaskExec(ctx context.Context, taskId string, runAt int64) (*TaskExec, error) {
 	db := dao.RO()
 	query := `
