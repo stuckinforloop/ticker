@@ -131,7 +131,7 @@ func (dao *TaskExecDAO) updateTaskExec(ctx context.Context, t *TaskExec) error {
 	return nil
 }
 
-func (p *ExecutorPayload) execute(ctx context.Context, now int64) (*http.Response, error) {
+func (p *ExecutorPayload) execute(ctx context.Context, now int64) ([]byte, error) {
 	runAt := time.Unix(p.RunAt, 0)
 	duration := runAt.Sub(time.Unix(now, 0))
 	time.Sleep(duration)
@@ -168,5 +168,10 @@ func (p *ExecutorPayload) execute(ctx context.Context, now int64) (*http.Respons
 		return nil, fmt.Errorf("do request: %w", err)
 	}
 
-	return resp, nil
+	respJSON := []byte{}
+	if err := json.NewDecoder(resp.Body).Decode(&respJSON); err != nil {
+		return []byte(`{"response": ""}`), nil
+	}
+
+	return respJSON, nil
 }

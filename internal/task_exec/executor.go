@@ -79,8 +79,9 @@ func (dao *TaskExecDAO) executeTask(ctx context.Context, messageID, message stri
 	if err != nil {
 		return fmt.Errorf("execute task: %w", err)
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&te.Response); err != nil {
-		return fmt.Errorf("unmarshal response failed: %w", err)
+
+	if err := json.Unmarshal(resp, &te.Response); err != nil {
+		return fmt.Errorf("unmarshal response: %w", err)
 	}
 
 	te.Status = StatusCompleted
@@ -94,8 +95,6 @@ func (dao *TaskExecDAO) executeTask(ctx context.Context, messageID, message stri
 	if err := dao.Queue.Acknowledge(ctx, messageID, ExecutorQueueName); err != nil {
 		return fmt.Errorf("sqs acknowledge failed: %w", err)
 	}
-
-	_ = resp.Body.Close()
 
 	return nil
 }
