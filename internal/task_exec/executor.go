@@ -77,15 +77,28 @@ func (dao *TaskExecDAO) executeTask(ctx context.Context, messageID, message stri
 
 	resp, err := execPayload.execute(ctx, now)
 	if err != nil {
-		return fmt.Errorf("execute task: %w", err)
+		dao.Logger.Error("execute failed", zap.Error(err))
+		te.Status = StatusFailed
+	} else {
+		te.Status = StatusCompleted
 	}
 
-	if err := json.Unmarshal(resp, &te.Response); err != nil {
-		return fmt.Errorf("unmarshal response: %w", err)
+	dao.Logger.Info("Execute complete ",
+		zap.String("task_exec_id", te.ID),
+		zap.String("status", string(te.Status)))
+
+	if resp != nil {
+		if err := json.Unmarshal(resp, &te.Response); err != nil {
+			return fmt.Errorf("unmarshal response: %w", err)
+		}
 	}
 
-	te.Status = StatusCompleted
 	te.FinishedAt = typePtr(dao.TimeNow())
+
+	sqsMsg, err = json.Marshal(te)
+	if err != nil {
+		return fmt.Errorf("marshal sqs message failed: %w", err)
+	}
 
 	_, err = dao.Queue.Enqueue(ctx, NotifierQueueName, string(sqsMsg), nil, nil, int64(0))
 	if err != nil {
@@ -95,6 +108,10 @@ func (dao *TaskExecDAO) executeTask(ctx context.Context, messageID, message stri
 	if err := dao.Queue.Acknowledge(ctx, messageID, ExecutorQueueName); err != nil {
 		return fmt.Errorf("sqs acknowledge failed: %w", err)
 	}
+
+	dao.Logger.Info("Ack success",
+		zap.String("message", message),
+		zap.String("message_id", messageID))
 
 	return nil
 }
