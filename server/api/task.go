@@ -73,8 +73,8 @@ func (a *API) CreateTask(w http.ResponseWriter, r *http.Request) *Response {
 }
 
 type GetTaskResponse struct {
-	Task            *task.Task           `json:"task"`
-	RecentTaskExecs *[]taskexec.TaskExec `json:"recent_executions"`
+	Task            *task.Task          `json:"task"`
+	RecentTaskExecs []taskexec.TaskExec `json:"recent_executions"`
 }
 
 func (a *API) GetTask(w http.ResponseWriter, r *http.Request) *Response {

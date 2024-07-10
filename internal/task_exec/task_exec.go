@@ -57,7 +57,7 @@ type ExecutorPayload struct {
 
 func (dao *TaskExecDAO) ListTaskExecs(
 	ctx context.Context, taskId string, limit int64, offset int64,
-) (*[]TaskExec, error) {
+) ([]TaskExec, error) {
 	db := dao.RO()
 	query := `
 		SELECT
@@ -96,7 +96,7 @@ func (dao *TaskExecDAO) ListTaskExecs(
 		execs = append(execs, t)
 	}
 
-	return &execs, nil
+	return execs, nil
 }
 
 func (dao *TaskExecDAO) findTaskExec(ctx context.Context, taskId string, runAt int64) (*TaskExec, error) {
