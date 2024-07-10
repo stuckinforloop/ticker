@@ -96,6 +96,10 @@ func (dao *TaskExecDAO) ListTaskExecs(
 		execs = append(execs, t)
 	}
 
+	if rows.Err() != nil {
+		return nil, fmt.Errorf("rows iteration: %w", err)
+	}
+
 	return execs, nil
 }
 
