@@ -55,7 +55,9 @@ type ExecutorPayload struct {
 	NotifyEvery      *int           `json:"notify_every"`
 }
 
-func (dao *TaskExecDAO) ListTaskExecs(ctx context.Context, taskId string, limit int64) (*[]TaskExec, error) {
+func (dao *TaskExecDAO) ListTaskExecs(
+	ctx context.Context, taskId string, limit int64, offset int64,
+) (*[]TaskExec, error) {
 	db := dao.RO()
 	query := `
 		SELECT
@@ -65,9 +67,10 @@ func (dao *TaskExecDAO) ListTaskExecs(ctx context.Context, taskId string, limit 
 		WHERE task_id = $1
 		ORDER BY run_at DESC
 		LIMIT $2
+		OFFSET $3
 	`
 	execs := []TaskExec{}
-	rows, err := db.QueryContext(ctx, query, taskId, limit)
+	rows, err := db.QueryContext(ctx, query, taskId, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("list task_execs: %w", err)
 	}

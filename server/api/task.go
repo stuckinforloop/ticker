@@ -99,7 +99,7 @@ func (a *API) GetTask(w http.ResponseWriter, r *http.Request) *Response {
 		}
 	}
 
-	execs, err := taskExecDAO.ListTaskExecs(r.Context(), t.ID, 10)
+	execs, err := taskExecDAO.ListTaskExecs(r.Context(), t.ID, 10, 0)
 	if err != nil {
 		a.dao.Logger.Error("list task_exec", zap.Error(err))
 	}
